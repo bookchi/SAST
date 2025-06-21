@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SAST Dashboard</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 40px; }
+.container { max-width: 600px; margin: auto; }
+input[type=text] { width: 100%; padding: 8px; margin-bottom: 8px; }
+button { padding: 8px 16px; }
+ul { list-style: none; padding: 0; }
+li { margin-bottom: 4px; }
+pre { background: #eee; padding: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>SAST Task Manager</h1>
+<input id="taskName" type="text" placeholder="New Task Name" />
+<button onclick="createTask()">Create Task</button>
+<h2>Tasks</h2>
+<ul id="taskList"></ul>
+<h2>Reports</h2>
+<pre id="reports"></pre>
+</div>
+<script>
+async function createTask() {
+  const name = document.getElementById('taskName').value;
+  await fetch('/tasks', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name}) });
+  loadTasks();
+}
+
+async function loadTasks() {
+  const res = await fetch('/tasks');
+  const tasks = await res.json();
+  const list = document.getElementById('taskList');
+  list.innerHTML = '';
+  tasks.forEach(t => {
+    const li = document.createElement('li');
+    const link = document.createElement('a');
+    link.href = '#';
+    link.textContent = t.name + ' (id ' + t.id + ')';
+    link.onclick = () => loadReports(t.id);
+    li.appendChild(link);
+    list.appendChild(li);
+  });
+}
+
+async function loadReports(id) {
+  const res = await fetch('/reports?task_id=' + id);
+  const reports = await res.json();
+  document.getElementById('reports').textContent = JSON.stringify(reports, null, 2);
+}
+
+loadTasks();
+</script>
+</body>
+</html>
